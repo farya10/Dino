@@ -18,6 +18,10 @@ cactus_options = [51, 431, 70, 410, 50, 420]
 stone_img = [pygame.image.load('Stone0.png'), pygame.image.load('Stone1.png')]
 cloud_img = [pygame.image.load('Cloud0.png'), pygame.image.load('Cloud1.png')]
 
+dino_img = [pygame.image.load('Dino0.png'), pygame.image.load('Dino1.png'), pygame.image.load('Dino2.png'),
+            pygame.image.load('Dino3.png'), pygame.image.load('Dino4.png')]
+img_counter = 0
+
 
 class Object:
     def __init__(self, x, y, width, image, speed):
@@ -85,7 +89,8 @@ def run_game():
         draw_array(cactus_arr)
         move_objects(stone, cloud)
 
-        pygame.draw.rect(display, (247, 240, 22), (usr_x, usr_y, usr_width, usr_height))
+        # pygame.draw.rect(display, (247, 240, 22), (usr_x, usr_y, usr_width, usr_height))
+        draw_dino()
 
         pygame.display.update()
         clock.tick(70)
@@ -179,6 +184,15 @@ def move_objects(stone, cloud):
         choice = random.randrange(0, 2)
         img_of_cloud = cloud_img[choice]
         cloud.return_self(display_width, random.randrange(10, 200), cloud.width, img_of_cloud)
+
+
+def draw_dino():
+    global img_counter
+    if img_counter == 25:
+        img_counter = 0
+
+    display.blit(dino_img[img_counter // 5], (usr_x, usr_y))
+    img_counter += 1
 
 
 run_game()
