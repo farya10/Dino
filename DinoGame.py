@@ -93,8 +93,12 @@ def run_game():
 
         draw_dino()
 
+        if check_collision(cactus_arr):
+            game = False
+
         pygame.display.update()
         clock.tick(70)
+    return game_over()
 
 
 def jump():
@@ -196,7 +200,7 @@ def draw_dino():
     img_counter += 1
 
 
-def print_text(message, x, y, font_color=(0, 0, 0), font_type='DoorsDefinitiveRegularr.ttf', font_size=50):
+def print_text(message, x, y, font_color=(0, 0, 0), font_type='DoorsDefinitiveRegularr.ttf', font_size=40):
     font_type = pygame.font.Font(font_type, font_size)
     text = font_type.render(message, True, font_color)
     display.blit(text, (x, y))
@@ -210,7 +214,7 @@ def pause():
                 pygame.quit()
                 quit()
 
-        print_text('Paused. Press enter to continue', 120, 300)
+        print_text('Paused. Press enter to continue', 160, 300)
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RETURN]:
@@ -220,4 +224,37 @@ def pause():
         clock.tick(15)
 
 
-run_game()
+def check_collision(barriers):
+    for barrier in barriers:
+        if usr_y + usr_height >= barrier.y:
+            if barrier.x <= usr_x <= barrier.x + barrier.width:
+                return True
+            elif barrier.x <= usr_x + usr_width <= barrier.x + barrier.width:
+                return True
+    return False
+
+
+def game_over():
+    stopped = True
+    while stopped:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        print_text('Game over. Press enter to play again, Esc to exit', 40, 300)
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RETURN]:
+            return True
+        if keys[pygame.K_ESCAPE]:
+            return False
+
+        pygame.display.update()
+        clock.tick(15)
+
+
+while run_game():
+    pass
+pygame.quit()
+quit()
