@@ -226,11 +226,19 @@ def pause():
 
 def check_collision(barriers):
     for barrier in barriers:
-        if usr_y + usr_height >= barrier.y:
-            if barrier.x <= usr_x <= barrier.x + barrier.width:
-                return True
-            elif barrier.x <= usr_x + usr_width <= barrier.x + barrier.width:
-                return True
+        if barrier.y == 431 or barrier.y == 410 or barrier.y == 420:  # маленький кактус
+            if not make_jump:
+                if barrier.x <= usr_x + usr_width - 5 <= barrier.x + barrier.width:
+                    return True
+            elif jump_counter >= 0:
+                if usr_y + usr_height - 15 >= barrier.y:
+                    if barrier.x <= usr_x + usr_width - 20 <= barrier.x + barrier.width:
+                        return True
+            else:
+                if usr_y + usr_height - 15 >= barrier.y:
+                    if barrier.x <= usr_x <= barrier.x + barrier.width:
+                        return True
+
     return False
 
 
