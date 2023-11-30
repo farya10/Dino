@@ -12,8 +12,7 @@ pygame.display.set_caption('Run, Dino!')
 pygame.mixer.music.load('background.mp3')
 pygame.mixer.music.set_volume(0.3)
 
-fall_sound = pygame.mixer.Sound('Bdish.mp3')
-
+loss_sound = pygame.mixer.Sound('loss.mp3')
 
 icon = pygame.image.load('icon.png')
 pygame.display.set_icon(icon)
@@ -26,7 +25,11 @@ cloud_img = [pygame.image.load('Cloud0.png'), pygame.image.load('Cloud1.png')]
 
 dino_img = [pygame.image.load('Dino0.png'), pygame.image.load('Dino1.png'), pygame.image.load('Dino2.png'),
             pygame.image.load('Dino3.png'), pygame.image.load('Dino4.png')]
+
+health_img = pygame.image.load('heart.png')
+
 img_counter = 0
+health = 3
 
 
 class Object:
@@ -112,8 +115,9 @@ def run_game():
 
         if check_collision(cactus_arr):
             pygame.mixer.music.stop()
-            pygame.mixer.Sound.play(fall_sound)
             game = False
+
+        show_health()
 
         pygame.display.update()
         clock.tick(70)
@@ -173,14 +177,26 @@ def draw_array(array):
     for cactus in array:
         check = cactus.move()
         if not check:
-            radius = find_radius(array)
+            object_return(array, cactus)
+            '''radius = find_radius(array)
 
             choice = random.randrange(0, 3)
             img = cactus_img[choice]
             width = cactus_options[choice * 2]
             height = cactus_options[choice * 2 + 1]
 
-            cactus.return_self(radius, height, width, img)
+            cactus.return_self(radius, height, width, img)'''
+
+
+def object_return(objects, obj):
+    radius = find_radius(objects)
+
+    choice = random.randrange(0, 3)
+    img = cactus_img[choice]
+    width = cactus_options[choice * 2]
+    height = cactus_options[choice * 2 + 1]
+
+    obj.return_self(radius, height, width, img)
 
 
 def open_random_objects():
@@ -252,15 +268,27 @@ def check_collision(barriers):
         if barrier.y == 431 or barrier.y == 410 or barrier.y == 420:  # маленький кактус
             if not make_jump:
                 if barrier.x <= usr_x + usr_width - 5 <= barrier.x + barrier.width:
-                    return True
+                    if check_health():
+                        object_return(barriers, barrier)
+                        return False
+                    else:
+                        return True
             elif jump_counter >= 0:
                 if usr_y + usr_height - 40 >= barrier.y:
                     if barrier.x <= usr_x + usr_width - 20 <= barrier.x + barrier.width:
-                        return True
+                        if check_health():
+                            object_return(barriers, barrier)
+                            return False
+                        else:
+                            return True
             else:
                 if usr_y + usr_height - 40 >= barrier.y:
                     if barrier.x <= usr_x <= barrier.x + barrier.width:
-                        return True
+                        if check_health():
+                            object_return(barriers, barrier)
+                            return False
+                        else:
+                            return True
 
     return False
 
@@ -309,10 +337,31 @@ def game_over():
         clock.tick(15)
 
 
+def show_health():
+    global health
+    show = 0
+    x = 20
+    while show != health:
+        display.blit(health_img, (x, 20))
+        x += 60
+        show += 1
+
+
+def check_health():
+    global health
+    health -= 1
+    if health == 0:
+        pygame.mixer.Sound.play(loss_sound)
+        return False
+    else:
+        return True
+
+
 while run_game():
     scores = 0
     make_jump = False
     jump_counter = 30
     usr_y = display_height - usr_height - 100
+    health = 2
 pygame.quit()
 quit()
