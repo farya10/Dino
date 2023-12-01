@@ -13,6 +13,7 @@ pygame.mixer.music.load('background.mp3')
 pygame.mixer.music.set_volume(0.3)
 
 loss_sound = pygame.mixer.Sound('loss.mp3')
+heart_plus_sound = pygame.mixer.Sound('hp+.mp3')
 
 icon = pygame.image.load('icon.png')
 pygame.display.set_icon(icon)
@@ -87,6 +88,7 @@ def run_game():
     land = pygame.image.load('land.png')
 
     stone, cloud = open_random_objects()
+    heart = Object(display_width, 280, 50, health_img, 4)
 
     while game:
         for event in pygame.event.get():
@@ -97,11 +99,6 @@ def run_game():
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             make_jump = True
-        if keys[pygame.K_ESCAPE]:
-            pause()
-
-        if make_jump:
-            jump()
 
         count_scores(cactus_arr)
 
@@ -112,6 +109,15 @@ def run_game():
         move_objects(stone, cloud)
 
         draw_dino()
+
+        if keys[pygame.K_ESCAPE]:
+            pause()
+
+        heart.move()
+        hearts_plus(heart)
+
+        if make_jump:
+            jump()
 
         if check_collision(cactus_arr):
             pygame.mixer.music.stop()
@@ -178,14 +184,6 @@ def draw_array(array):
         check = cactus.move()
         if not check:
             object_return(array, cactus)
-            '''radius = find_radius(array)
-
-            choice = random.randrange(0, 3)
-            img = cactus_img[choice]
-            width = cactus_options[choice * 2]
-            height = cactus_options[choice * 2 + 1]
-
-            cactus.return_self(radius, height, width, img)'''
 
 
 def object_return(objects, obj):
@@ -355,6 +353,23 @@ def check_health():
         return False
     else:
         return True
+
+
+def hearts_plus(heart):
+    global health, usr_x, usr_y, usr_width, usr_height
+
+    if heart.x <= -heart.width:
+        radius = display_width + random.randrange(500, 1700)
+        heart.return_self(radius, heart.y, heart.width, heart.image)
+
+    if usr_x <= heart.x <= usr_x + usr_width:
+        if usr_y <= heart.y <= usr_y + usr_height:
+            pygame.mixer.Sound.play(heart_plus_sound)
+            if health < 5:
+                health += 1
+
+            radius = display_width + random.randrange(500, 1700)
+            heart.return_self(radius, heart.y, heart.width, heart.image)
 
 
 while run_game():
