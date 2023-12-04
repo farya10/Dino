@@ -9,12 +9,10 @@ display_height = 600
 display = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('Run, Dino!')
 
-pygame.mixer.music.load('background.mp3')
-pygame.mixer.music.set_volume(0.3)
-
 loss_sound = pygame.mixer.Sound('loss.mp3')
 heart_plus_sound = pygame.mixer.Sound('hp+.mp3')
 button_sound = pygame.mixer.Sound('button.mp3')
+bullet_sound = pygame.mixer.Sound('shot.mp3')
 
 icon = pygame.image.load('icon.png')
 pygame.display.set_icon(icon)
@@ -29,6 +27,9 @@ dino_img = [pygame.image.load('Dino0.png'), pygame.image.load('Dino1.png'), pyga
             pygame.image.load('Dino3.png'), pygame.image.load('Dino4.png')]
 
 health_img = pygame.image.load('heart.png')
+
+bullet_img = pygame.image.load('shot.png')
+bullet_img = pygame.transform.scale(bullet_img, (30, 9))
 
 img_counter = 0
 health = 3
@@ -87,6 +88,47 @@ class Button:
         print_text(message=message, x=x + 10, y=y + 10, font_size=font_size)
 
 
+class Bullet:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.speed_x = 8
+        self.speed_y = 0
+        self.dest_x = 0
+        self.dest_y = 0
+
+    def move(self):
+        self.x += self.speed_x
+        if self.x <= display_width:
+            display.blit(bullet_img, (self.x, self.y))
+            return True
+        else:
+            return False
+
+    def find_path(self, dest_x, dest_y):
+        self.dest_x = dest_x
+        self.dest_y = dest_y
+
+        delta_x = dest_x - self.x
+        count_up = delta_x // self.speed_x
+        if self.y >= dest_y:
+            delta_y = self.y - dest_y
+            self.speed_y = delta_y / count_up
+        else:
+            delta_y = dest_y - self.y
+            self.speed_y = -(delta_y / count_up)
+
+    def move_to(self):
+        self.x += self.speed_x
+        self.y -= self.speed_y
+
+        if self.x <= display_width and self.y >= 0:
+            display.blit(bullet_img, (self.x, self.y))
+            return True
+        else:
+            return False
+
+
 usr_width = 60
 usr_height = 100
 usr_x = display_width // 3
@@ -106,14 +148,20 @@ scores = 0
 max_scores = 0
 max_above = 0
 
+cooldown = 0
+
 
 def show_menu():
     menu_bckgr = pygame.image.load('menu.jpg')
-    show = True
+
+    pygame.mixer.music.load('menu_music.mp3')
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play(-1)
 
     start_btn = Button(230, 70)
     quit_btn = Button(120, 70)
 
+    show = True
     while show:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -128,19 +176,23 @@ def show_menu():
 
 
 def start_game():
-    global scores, make_jump, jump_counter, usr_y, health
+    global scores, make_jump, jump_counter, usr_y, health, cooldown
+
+    pygame.mixer.music.load('background.mp3')
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play(-1)
+
     while game_cycle():
         scores = 0
         make_jump = False
         jump_counter = 30
         usr_y = display_height - usr_height - 100
         health = 2
+        cooldown = 0
 
 
 def game_cycle():
-    global make_jump
-
-    pygame.mixer.music.play(-1)
+    global make_jump, cooldown
 
     game = True
     cactus_arr = []
@@ -150,7 +202,8 @@ def game_cycle():
     stone, cloud = open_random_objects()
     heart = Object(display_width, 280, 50, health_img, 4)
 
-    button = Button(100, 60)
+    all_btn_bullets = []
+    all_ms_bullets = []
 
     while game:
         for event in pygame.event.get():
@@ -159,6 +212,9 @@ def game_cycle():
                 quit()
 
         keys = pygame.key.get_pressed()
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()
+
         if keys[pygame.K_SPACE]:
             make_jump = True
 
@@ -174,6 +230,29 @@ def game_cycle():
 
         if keys[pygame.K_ESCAPE]:
             pause()
+
+        if not cooldown:
+            if keys[pygame.K_x]:
+                pygame.mixer.Sound.play(bullet_sound)
+                all_btn_bullets.append(Bullet(usr_x + usr_width, usr_y + 28))
+                cooldown = 50
+            elif click[0]:
+                pygame.mixer.Sound.play(bullet_sound)
+                add_bullet = Bullet(usr_x + usr_width, usr_y + 28)
+                add_bullet.find_path(mouse[0], mouse[1])
+                all_ms_bullets.append(add_bullet)
+                cooldown = 50
+        else:
+            print_text('Cooldown time: ' + str(cooldown // 10), 540, 40)
+            cooldown -= 1
+
+        for bullet in all_btn_bullets:
+            if not bullet.move():
+                all_btn_bullets.remove(bullet)
+
+        for bullet in all_ms_bullets:
+            if not bullet.move_to():
+                all_ms_bullets.remove(bullet)
 
         heart.move()
         hearts_plus(heart)
