@@ -13,3 +13,6 @@
 > At the beginning of the game, Dino is given two lives ❤️. However, during the journey, he can collect and accumulate them (maximum - 5). Crashed into a cactus - minus one life! 🌵
 >
 > Points are awarded for each jumped cactus 🪙. In one session, that is, before completely exiting the game, you can set a record and then try to improve it! :shipit:
+
+# Gameplay 🎥
+![](https://github.com/farya10/Dino/blob/master/Dino.gif)
