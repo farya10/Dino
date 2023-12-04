@@ -14,6 +14,7 @@ pygame.mixer.music.set_volume(0.3)
 
 loss_sound = pygame.mixer.Sound('loss.mp3')
 heart_plus_sound = pygame.mixer.Sound('hp+.mp3')
+button_sound = pygame.mixer.Sound('button.mp3')
 
 icon = pygame.image.load('icon.png')
 pygame.display.set_icon(icon)
@@ -57,6 +58,35 @@ class Object:
         display.blit(self.image, (self.x, self.y))
 
 
+class Button:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.inactive_clr = (17, 100, 180)
+        self.active_clr = (62, 95, 138)
+
+    def draw(self, x, y, message, action=None, font_size=40):
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()
+
+        if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height:
+            pygame.draw.rect(display, self.active_clr, (x, y, self.width, self.height))
+
+            if click[0] == 1:
+                pygame.mixer.Sound.play(button_sound)
+                pygame.time.delay(300)
+                if action is not None:
+                    if action == quit:
+                        pygame.quit()
+                        quit()
+                    else:
+                        action()
+        else:
+            pygame.draw.rect(display, self.inactive_clr, (x, y, self.width, self.height))
+
+        print_text(message=message, x=x + 10, y=y + 10, font_size=font_size)
+
+
 usr_width = 60
 usr_height = 100
 usr_x = display_width // 3
@@ -77,7 +107,37 @@ max_scores = 0
 max_above = 0
 
 
-def run_game():
+def show_menu():
+    menu_bckgr = pygame.image.load('menu.jpg')
+    show = True
+
+    start_btn = Button(230, 70)
+    quit_btn = Button(120, 70)
+
+    while show:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        display.blit(menu_bckgr, (0, 0))
+        start_btn.draw(270, 200, 'Start game', start_game, 50)
+        quit_btn.draw(330, 300, 'Quit', quit, 55)
+
+        pygame.display.update()
+        clock.tick(60)
+
+
+def start_game():
+    global scores, make_jump, jump_counter, usr_y, health
+    while game_cycle():
+        scores = 0
+        make_jump = False
+        jump_counter = 30
+        usr_y = display_height - usr_height - 100
+        health = 2
+
+
+def game_cycle():
     global make_jump
 
     pygame.mixer.music.play(-1)
@@ -89,6 +149,8 @@ def run_game():
 
     stone, cloud = open_random_objects()
     heart = Object(display_width, 280, 50, health_img, 4)
+
+    button = Button(100, 60)
 
     while game:
         for event in pygame.event.get():
@@ -372,11 +434,6 @@ def hearts_plus(heart):
             heart.return_self(radius, heart.y, heart.width, heart.image)
 
 
-while run_game():
-    scores = 0
-    make_jump = False
-    jump_counter = 30
-    usr_y = display_height - usr_height - 100
-    health = 2
+show_menu()
 pygame.quit()
 quit()
