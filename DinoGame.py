@@ -129,6 +129,30 @@ class Bullet:
             return False
 
 
+class GameVariables:
+    def __init__(self):
+        self.make_jump = False
+        self.jump_counter = 30
+        self.scores = 0
+        self.max_scores = 0
+        self.max_above = 0
+        self.cooldown = 0
+        self.usr_width = 60
+        self.usr_height = 100
+        self.usr_x = display_width // 3
+        self.usr_y = display_height - self.usr_height - 100
+        self.cactus_width = 20
+        self.cactus_height = 70
+        self.cactus_x = display_width - 50
+        self.cactus_y = display_height - self.cactus_height - 100
+        self.img_counter = 0
+        self.health = 3
+        self.display_width = 800
+        self.display_height = 600
+
+
+game_vars = GameVariables()
+
 usr_width = 60
 usr_height = 100
 usr_x = display_width // 3
@@ -176,24 +200,20 @@ def show_menu():
 
 
 def start_game():
-    global scores, make_jump, jump_counter, usr_y, health, cooldown
-
     pygame.mixer.music.load('background.mp3')
     pygame.mixer.music.set_volume(0.3)
     pygame.mixer.music.play(-1)
 
     while game_cycle():
-        scores = 0
-        make_jump = False
-        jump_counter = 30
-        usr_y = display_height - usr_height - 100
-        health = 2
-        cooldown = 0
+        game_vars.scores = 0
+        game_vars.make_jump = False
+        game_vars.jump_counter = 30
+        game_vars.usr_y = display_height - usr_height - 100
+        game_vars.health = 2
+        game_vars.cooldown = 0
 
 
 def game_cycle():
-    global make_jump, cooldown
-
     game = True
     cactus_arr = []
     create_cactus_arr(cactus_arr)
@@ -216,7 +236,7 @@ def game_cycle():
         click = pygame.mouse.get_pressed()
 
         if keys[pygame.K_SPACE]:
-            make_jump = True
+            game_vars.make_jump = True
 
         count_scores(cactus_arr)
 
@@ -231,20 +251,20 @@ def game_cycle():
         if keys[pygame.K_ESCAPE]:
             pause()
 
-        if not cooldown:
+        if not game_vars.cooldown:
             if keys[pygame.K_x]:
                 pygame.mixer.Sound.play(bullet_sound)
                 all_btn_bullets.append(Bullet(usr_x + usr_width, usr_y + 28))
-                cooldown = 50
+                game_vars.cooldown = 50
             elif click[0]:
                 pygame.mixer.Sound.play(bullet_sound)
                 add_bullet = Bullet(usr_x + usr_width, usr_y + 28)
                 add_bullet.find_path(mouse[0], mouse[1])
                 all_ms_bullets.append(add_bullet)
-                cooldown = 50
+                game_vars.cooldown = 50
         else:
-            print_text('Cooldown time: ' + str(cooldown // 10), 540, 40)
-            cooldown -= 1
+            print_text('Cooldown time: ' + str(game_vars.cooldown // 10), 540, 40)
+            game_vars.cooldown -= 1
 
         for bullet in all_btn_bullets:
             if not bullet.move():
@@ -257,7 +277,7 @@ def game_cycle():
         heart.move()
         hearts_plus(heart)
 
-        if make_jump:
+        if game_vars.make_jump:
             jump()
 
         if check_collision(cactus_arr):
@@ -272,13 +292,12 @@ def game_cycle():
 
 
 def jump():
-    global usr_y, jump_counter, make_jump
-    if jump_counter >= -30:
-        usr_y -= jump_counter / 2.5
-        jump_counter -= 1
+    if game_vars.jump_counter >= -30:
+        game_vars.usr_y -= game_vars.jump_counter / 2.5
+        game_vars.jump_counter -= 1
     else:
-        jump_counter = 30
-        make_jump = False
+        game_vars.jump_counter = 30
+        game_vars.make_jump = False
 
 
 def create_cactus_arr(array):
@@ -366,12 +385,11 @@ def move_objects(stone, cloud):
 
 
 def draw_dino():
-    global img_counter
-    if img_counter == 25:
-        img_counter = 0
+    if game_vars.img_counter == 25:
+        game_vars.img_counter = 0
 
-    display.blit(dino_img[img_counter // 5], (usr_x, usr_y))
-    img_counter += 1
+    display.blit(dino_img[game_vars.img_counter // 5], (usr_x, usr_y))
+    game_vars.img_counter += 1
 
 
 def print_text(message, x, y, font_color=(0, 0, 0), font_type='DoorsDefinitiveRegularr.ttf', font_size=40):
@@ -433,7 +451,6 @@ def check_collision(barriers):
 
 
 def count_scores(barriers):
-    global scores, max_above
     above_cactus = 0
 
     if -20 <= jump_counter < 25:
@@ -444,17 +461,16 @@ def count_scores(barriers):
                 elif barrier.x <= usr_x + usr_width <= barrier.x + barrier.width:
                     above_cactus += 1
 
-        max_above = max(max_above, above_cactus)
+        game_vars.max_above = max(game_vars.max_above, above_cactus)
     else:
         if jump_counter == -30:
-            scores += max_above
-            max_above = 0
+            game_vars.scores += game_vars.max_above
+            game_vars.max_above = 0
 
 
 def game_over():
-    global scores, max_scores
-    if scores > max_scores:
-        max_scores = scores
+    if game_vars.scores > game_vars.max_scores:
+        game_vars.max_scores = game_vars.scores
 
     stopped = True
     while stopped:
@@ -464,7 +480,7 @@ def game_over():
                 quit()
 
         print_text('Game over. Press enter to play again, Esc to exit', 40, 300)
-        print_text('Max scores: ' + str(max_scores), 300, 350)
+        print_text('Max scores: ' + str(game_vars.max_scores), 300, 350)
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RETURN]:
@@ -477,19 +493,17 @@ def game_over():
 
 
 def show_health():
-    global health
     show = 0
     x = 20
-    while show != health:
+    while show != game_vars.health:
         display.blit(health_img, (x, 20))
         x += 60
         show += 1
 
 
 def check_health():
-    global health
-    health -= 1
-    if health == 0:
+    game_vars.health -= 1
+    if game_vars.health == 0:
         pygame.mixer.Sound.play(loss_sound)
         return False
     else:
@@ -497,17 +511,15 @@ def check_health():
 
 
 def hearts_plus(heart):
-    global health, usr_x, usr_y, usr_width, usr_height
-
     if heart.x <= -heart.width:
         radius = display_width + random.randrange(500, 1700)
         heart.return_self(radius, heart.y, heart.width, heart.image)
 
-    if usr_x <= heart.x <= usr_x + usr_width:
-        if usr_y <= heart.y <= usr_y + usr_height:
+    if game_vars.usr_x <= heart.x <= game_vars.usr_x + game_vars.usr_width:
+        if game_vars.usr_y <= heart.y <= game_vars.usr_y + game_vars.usr_height:
             pygame.mixer.Sound.play(heart_plus_sound)
-            if health < 5:
-                health += 1
+            if game_vars.health < 5:
+                game_vars.health += 1
 
             radius = display_width + random.randrange(500, 1700)
             heart.return_self(radius, heart.y, heart.width, heart.image)
